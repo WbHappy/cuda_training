@@ -1,6 +1,6 @@
 CC=nvcc
-SRC=Main.cpp GlobalVariableLoop.cu
-INCL=GlobalVariableLoop.hpp
+SRC=Main.cu
+INCL=
 
 Main : $(SRC) $(INCL)
 	$(CC) -o $@ $(SRC) --resource-usage

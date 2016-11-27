@@ -1,14 +1,14 @@
 #include "GlobalVariableLoop.hpp"
 
-__global__ void KernelSimple(bool* d_inputs, uint32_t* d_outputs){
-    uint32_t idx = blockDim.x * blockIdx.x + threadIdx.x;
-    uint32_t idy = blockDim.y * blockIdx.y + threadIdx.y;
-    uint32_t tid = idx + idy * gridDim.x * blockDim.x;
-
-    for(int i = 0; i < 10; i++){
-        d_outputs[tid] |= (d_inputs[tid * 32 + i] << i);
-    }
-}
+// __global__ void KernelSimple(bool* d_inputs, uint32_t* d_outputs){
+//     uint32_t idx = blockDim.x * blockIdx.x + threadIdx.x;
+//     uint32_t idy = blockDim.y * blockIdx.y + threadIdx.y;
+//     uint32_t tid = idx + idy * gridDim.x * blockDim.x;
+//
+//     for(int i = 0; i < 10; i++){
+//         d_outputs[tid] |= (d_inputs[tid * 32 + i] << i);
+//     }
+// }
 
 __device__ static uint32_t temp = 0;
 __global__ void KernelDevice(bool* d_inputs, uint32_t* d_outputs){
@@ -60,10 +60,10 @@ void GlobalVariableLoop::CopyInputToDevice(){
     cudaDeviceSynchronize();
 }
 
-void GlobalVariableLoop::RunKernelGPUSimple(){
-    KernelSimple<<<dim3(grid_x, grid_y), dim3(block_x, block_y)>>>(d_inputs, d_outputs);
-    cudaDeviceSynchronize();
-}
+// void GlobalVariableLoop::RunKernelGPUSimple(){
+//     KernelSimple<<<dim3(grid_x, grid_y), dim3(block_x, block_y)>>>(d_inputs, d_outputs);
+//     cudaDeviceSynchronize();
+// }
 
 void GlobalVariableLoop::RunKernelGPUDevice(){
     KernelDevice<<<dim3(grid_x, grid_y), dim3(block_x, block_y)>>>(d_inputs, d_outputs);
