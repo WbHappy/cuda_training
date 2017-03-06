@@ -3,4 +3,4 @@ SRC=Main.cu
 INCL=
 
 Main : $(SRC) $(INCL)
-	$(CC) -o $@ $(SRC) --resource-usage
+	$(CC)-arch $(arch) -o $@ $(SRC) --resource-usage

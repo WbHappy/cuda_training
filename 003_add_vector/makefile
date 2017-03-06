@@ -1,2 +1,2 @@
 Main : Main.cu
-	nvcc -o $@ $^
+	nvcc -arch $(arch) -o $@ $^

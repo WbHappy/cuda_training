@@ -1,2 +1,2 @@
 Main : Main.cu
-	nvcc -o $@ $^ `pkg-config --libs opencv`
+	nvcc -arch $(arch) -o $@ $^ `pkg-config --libs opencv`
