@@ -3,6 +3,8 @@
 
 #include <sys/time.h>
 #include <unistd.h>
+#include <stdint.h>
+#include <stdio.h>
 
 class Stopwatch{
     struct timeval start, end;

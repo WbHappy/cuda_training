@@ -10,7 +10,7 @@
 #define THREADS 32
 #define BLOCKS 1
 #define LISTS 32
-#define N 1024
+#define N (1024*5)
 
 typedef uint32_t u32;
 

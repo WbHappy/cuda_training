@@ -84,6 +84,69 @@ __device__ void mergeArrays1(const u32 * const src_array, u32* const dest_array,
 
 }
 
+__device__ void mergeArrays6(const u32 * const src_array, u32* const dest_array, const u32 num_list, const u32 num_elements, const u32 tid)
+{
+    const u32 num_elements_per_list = num_elements / num_list;
+
+    // Shared memory declared for all (32) threads within warp! 48 KB
+    __shared__ u32 list_indexes[LISTS];
+    // Each thread set its list_indexes[]
+    list_indexes[tid] = 0;
+    // Wait for list_indexes[] to be cleared by all threads - program waits until all threads get to this moment
+    __syncthreads();
+
+    // Iterate over all elements
+    for(u32 i = 0; i<N; i++)
+    {
+        //create value shared with other threads
+        __shared__ u32 min_val;
+        __shared__ u32 min_tid;
+
+        // Registe for work purposes
+        u32 data;
+
+        // If current list havent been cleared
+        if(list_indexes[tid] < num_elements_per_list)
+        {
+            // Work out from the list_indexes, the index inside linear array
+            const u32 std_idx = tid + (list_indexes[tid] * num_list);
+
+            // Read data from the given list into local register for thread
+            data = src_array[std_idx];
+        }
+        else
+        {
+            data = 0xFFFFFFFF;
+        }
+
+        // Thread 0  clears min_val and min_tid values, so the first thread wins minimum
+        if(tid==0){
+            min_val = 0xFFFFFFFF;
+            min_tid = 0xFFFFFFFF;
+        }
+
+        // Wait for all threads
+        __syncthreads();
+
+        // Have every thread try to store its value into min_val. Only thread with loest value will win
+        atomicMin(&min_val, data);
+        __syncthreads();
+
+        // Check for lowest tid for threads with lowest values(if equal)
+        if(min_val == data){
+            atomicMin(&min_tid, tid);
+        }
+        __syncthreads();
+
+        //If this thread has the lowest tid
+        if(tid == min_tid){
+            list_indexes[tid]++;
+
+            dest_array[i] = data;
+        }
+    }
+}
+
 __global__ void __radixSort__(u32* const data, const u32 num_list, const u32 num_elements)
 {
     const u32 tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -95,11 +158,13 @@ __global__ void __radixSort__(u32* const data, const u32 num_list, const u32 num
 
     radixSort(sort_tmp, sort_tmp_1, num_list, num_elements, tid);
 
-    mergeArrays1(sort_tmp, data, num_list, num_elements, tid);
+    // mergeArrays1(sort_tmp, data, num_list, num_elements, tid);  // Serial merging
+    mergeArrays6(sort_tmp, data, num_list, num_elements, tid);  // Pralel merging - 3x faster
 }
 
 void RadixSort::RunKernelGPU(){
     __radixSort__ <<<BLOCKS, THREADS>>> (d_array, (int)LISTS, (int)N);
+    cudaDeviceSynchronize();
 }
 
 RadixSort::RadixSort(){
@@ -113,6 +178,8 @@ RadixSort::RadixSort(){
 
     cudaMalloc((void**)&d_array, N*sizeof(u32));
     cudaMemcpy(d_array, h_array, N*sizeof(u32), cudaMemcpyHostToDevice);
+    cudaDeviceSynchronize();
+
 
 }
 
@@ -123,4 +190,6 @@ RadixSort::~RadixSort(){
 
 void RadixSort::CopyResults(){
     cudaMemcpy(h_array, d_array, N*sizeof(u32), cudaMemcpyDeviceToHost);
+    cudaDeviceSynchronize();
+
 }
