@@ -3,4 +3,4 @@ SRC=Main.cpp GlobalVariableLoop.cu
 INCL=GlobalVariableLoop.hpp
 
 Main : $(SRC) $(INCL)
-	$(CC) -o $@ $(SRC) --resource-usage
+	$(CC)-arch $(arch) -o $@ $(SRC) --resource-usage
